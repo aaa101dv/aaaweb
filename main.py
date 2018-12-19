@@ -8,21 +8,26 @@ import sys
 
 reload(sys)
 
-from  flask import Flask, render_template, url_for, request
+from  flask import Flask, render_template, url_for, request, session
 
 app = Flask(__name__)
+app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 sys.setdefaultencoding('utf-8')
 
 student="student1" # <-------------------- zamijeniti student1 vašim korisničkim imenom na AWS serveru
 port='5040' # <--------------------------- 5040 zamijeniti sa 5000 + vaš redni broj sa liste
 
-ime_korisnika="Nitko nije prijavljen."
 title="Autorizacija i autentifikacija";
 
 conn = psycopg2.connect(host="localhost",database=student,user=student,password=student)
 
 sql_spremi_registraciju = """INSERT INTO korisnik (username, password, ime_prezime) VALUES (%s, %s, %s);"""
 sql_podaci_korisnika = """SELECT password, ime_prezime FROM korisnik WHERE username = %s;"""
+
+def set_session_data(username, ime_korisnika):
+
+    session['ime_korisnika'] = ime_korisnika
+    session['username'] = username
 
 def check_user(username):
 
@@ -64,7 +69,11 @@ def password_strength(password):
 @app.route("/")
 def home():
 
-    return render_template("home.html", naziv=title, ime=ime_korisnika) 
+    if(not 'username' in session):
+        session['username']=None
+        session["ime_korisnika"]="Nitko nije prijavljen."
+
+    return render_template("home.html", naziv=title, ime=session["ime_korisnika"]) 
 
 @app.route("/registracija")
 def register():
@@ -95,7 +104,7 @@ def store_registration():
 
         add_user(request.form['username'], password_hash, request.form['ime_prezime']);    
         
-    return render_template("home.html",naziv=title, ime=ime_korisnika) 
+    return render_template("home.html",naziv=title, ime=session["ime_korisnika"]) 
 
 @app.route("/autentikacija")
 def auth():
@@ -123,11 +132,20 @@ def do_auth():
         print "MD5 HASH UNESENE LOZINKE--> "+password_hash
         
         if(db_password_hash==password_hash): # <---------usporediti hash-eve     
-            ime_korisnika = row[1]
+            set_session_data(username,row[1])
         else:
+            set_session_data("Nitko nije prijavljen.",None)
             return render_template("error.html",naziv=title, error="Lozinka nije ispravna!" )
 
-    return render_template("home.html",naziv=title, ime=ime_korisnika) 
+    return render_template("home.html",naziv=title, ime=session["ime_korisnika"]) 
+
+@app.route("/odjava")
+def logout():
+    session['username']=None
+    session["ime_korisnika"]="Nitko nije prijavljen"
+    return render_template("home.html",naziv=title, ime=session["ime_korisnika"]) 
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=port)
