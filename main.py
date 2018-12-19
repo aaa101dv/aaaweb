@@ -98,7 +98,7 @@ def store_registration():
         if(check_user(username) is not None):
             return render_template("error.html",naziv=title, error="Korisnik "+request.form['ime_prezime']+" već postoji!" )
         
-        password_hash = md5.new(password).hexdigest() # <--------izračunati hash za password
+        ??? # <--------izračunati hash za password
         
         print "PASWORD MD5 HASH--> "+password_hash
 
@@ -126,12 +126,12 @@ def do_auth():
         
         db_password_hash = row[0]
 
-        password_hash = md5.new(password).hexdigest() # <---izračunati hash za password
+        ?? # <---izračunati hash za password
 
         print "POHRANJENI MD5 HASH     --> "+db_password_hash
         print "MD5 HASH UNESENE LOZINKE--> "+password_hash
         
-        if(db_password_hash==password_hash): # <---------usporediti hash-eve     
+        ?? # <---------usporediti hash-eve     
             set_session_data(username,row[1])
         else:
             set_session_data("Nitko nije prijavljen.",None)
